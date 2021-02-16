@@ -22,13 +22,15 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n"); // we can see Hello World on the page 
+  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  // we can see Hello World on the page
 });
 
 //route for /urls
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
-  console.log(templateVars); // we are sending that to the URLs index template line 39
+  console.log(templateVars);
+  // we are sending that to the URLs index template line 39
   /*{
    urls: {
      b2xVn2: 'http://www.lighthouselabs.ca',
@@ -60,13 +62,15 @@ app.get("/u/:shortURL", (req, res) => {
 
 //Add a POST Route to Receive the Form Submission
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString(); 
-  urlDatabase[shortURL] = req.body.longURL; // we are adding KEy/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new 
-  console.log(req.body);  // Log the POST request body to the console
-  //res.send("Ok");         // Respond with 'Ok' (we will replace this)
-  res.redirect(`/urls/${shortURL}`) 
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  // we are adding Key/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new
+  console.log(req.body);
+  // Log the POST request body to the console
+  //res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  res.redirect(`/urls/${shortURL}`);
   // Redirect After Form Submission -taking us to line 37 "/urls/:shortURL"
-}); 
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
