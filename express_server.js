@@ -74,14 +74,24 @@ app.post("/urls", (req, res) => {
   // Redirect After Form Submission -taking us to line 37 "/urls/:shortURL"
 });
 
+//----Add a POST route that updates a URL resource; POST /urls/:id
+app.post("/urls/:shortURL", (req, res) => {
+  console.log(req.body);
+  urlDatabase[req.params.shortURL] = req.body.longURL;
+  res.redirect(`/urls`);
+});
+
 //----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
   delete urlDatabase[shortURL];
 
-  res.redirect(`/urls/`) //redirect the client back to the urls_index page ("/urls").
+  res.redirect(`/urls/`); 
+  //redirect the client back to the urls_index page ("/urls").
 });
+
+
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
