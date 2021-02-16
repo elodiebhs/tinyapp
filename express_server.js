@@ -22,12 +22,20 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+  res.send("<html><body>Hello <b>World</b></body></html>\n"); // we can see Hello World on the page 
 });
 
 //route for /urls
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
+  console.log(templateVars); // we are sending that to the URLs index template line 39
+  /*{
+   urls: {
+     b2xVn2: 'http://www.lighthouselabs.ca',
+     '9sm5xK': 'http://www.google.com'
+   }
+  }
+ */
   res.render("urls_index", templateVars);
 });
 
@@ -42,7 +50,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-//Redirect any request to "/u/:shortURL" to its longURL
+//Redirect any request to "/u/:shortURL" to its longURL // we type in the short URL and it brings us to the long URL website
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
@@ -53,7 +61,7 @@ app.get("/u/:shortURL", (req, res) => {
 //Add a POST Route to Receive the Form Submission
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString(); 
-  urlDatabase[shortURL] = req.body.longURL; // makes a key 
+  urlDatabase[shortURL] = req.body.longURL; // we are adding KEy/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new 
   console.log(req.body);  // Log the POST request body to the console
   //res.send("Ok");         // Respond with 'Ok' (we will replace this)
   res.redirect(`/urls/${shortURL}`) 
