@@ -25,7 +25,7 @@ function generateRandomString() {
 
 
 
-///----------GET
+///------------GET
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -41,7 +41,10 @@ app.get("/hello", (req, res) => {
 
 //----route for /urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
   console.log(templateVars);
   // we are sending that to the URLs index template line 39
   /*{
@@ -54,16 +57,20 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+
 //----Add a GET Route to Show the Form
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars ={username: req.cookies["username"]}
+  res.render("urls_new", templateVars);
 });
+
 
 //----Adding a Second Route
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"], };
   res.render("urls_show", templateVars);
 });
+
 
 //----Redirect any request to "/u/:shortURL" to its longURL // we type in the short URL and it brings us to the long URL website
 app.get("/u/:shortURL", (req, res) => {
@@ -87,12 +94,14 @@ app.post("/urls", (req, res) => {
   // Redirect After Form Submission -taking us to line 37 "/urls/:shortURL"
 });
 
+
 //----Add a POST route that updates a URL resource; POST /urls/:id -user click update
 app.post("/urls/:shortURL", (req, res) => {
   console.log(req.body);
   urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect(`/urls`);
 });
+
 
 //----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete -user click delete
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -103,6 +112,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect(`/urls/`); 
   //redirect the client back to the urls_index page ("/urls").
 });
+
 
 //----Add an endpoint to handle a POST to /login in Express server. - user login 
 app.post("/login", (req, res) => {
