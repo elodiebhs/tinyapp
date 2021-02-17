@@ -163,6 +163,14 @@ app.post("/register", (req, res) =>{
     email: req.body.email,
     password: req.body.password
   }
+
+  if (req.body.email || req.body.password === ""){
+    res.redirect(400, '/register')
+  } else if (req.body.email === users[user].email){
+    res.redirect(400, '/register')
+    }
+  
+
   res.cookie('user_id', newUserID)
   res.redirect(`/urls`);
 })
