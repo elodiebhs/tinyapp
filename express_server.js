@@ -55,9 +55,11 @@ app.get("/hello", (req, res) => {
 
 //----route for /urls
 app.get("/urls", (req, res) => {
+  const key = req.cookies["user_id"];
   const templateVars = { 
     urls: urlDatabase,
-    username: req.cookies["username"]
+    user: users[key]
+  
   };
   console.log(templateVars);
   // we are sending that to the URLs index template line 39
@@ -95,7 +97,7 @@ app.get("/u/:shortURL", (req, res) => {
 //----Adding a route to register
 app.get("/register", (req,res) => {
   
-  const templateVars = {username: req.cookies['username']};
+  const templateVars = {user: req.cookies['user_id']};
 
   res.render("register", templateVars);
 })
