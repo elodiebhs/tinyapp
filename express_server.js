@@ -7,7 +7,7 @@ const PORT = 8080; // default port 8080
 ///SET
 app.set("view engine", "ejs"); //Set ejs as the view engine.
 
-///USE
+///MIDDLEWARE - how we use the packages
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
@@ -21,8 +21,22 @@ const urlDatabase = {
 //Generate a Random ShortURL
 function generateRandomString() {
   return Math.random().toString(36).substr(2, 6);
-}
+};
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+};
+//users["newuser"]={id : "elodie", email : "elodiebouthors@"}
+//console.log(users)
 
 
 ///------------GET
@@ -58,14 +72,14 @@ app.get("/urls", (req, res) => {
 });
 
 
-//----Add a GET Route to Show the Form
+//----Add a GET Route to Show the Form - create new url
 app.get("/urls/new", (req, res) => {
   const templateVars ={username: req.cookies["username"]}
   res.render("urls_new", templateVars);
 });
 
 
-//----Adding a Second Route
+//----Adding a Second Route for short URL page
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"], };
   res.render("urls_show", templateVars);
@@ -137,6 +151,19 @@ app.post("/logout", (req, res) => {
   res.clearCookie("username", {path: '/'});
   res.redirect(`/urls`);
 });
+
+//---Registration Handler
+app.post("/register", (req, res) =>{
+  console.log('register',req.body)
+  const newUserID = generateRandomString()
+  users[newUserID]= {
+    id: newUserID,
+    email: req.body.email,
+    password: req.body.password
+  }
+  res.cookie('user_id', newUserID)
+  res.redirect(`/urls`);
+})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
