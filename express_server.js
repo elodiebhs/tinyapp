@@ -1,18 +1,31 @@
 const express = require("express");
+const cookieParser = require('cookie-parser')
+const bodyParser = require("body-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
+///SET
 app.set("view engine", "ejs"); //Set ejs as the view engine.
 
+///USE
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(cookieParser());
+
+
+//----Global Scope Variables
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
 
-const bodyParser = require("body-parser");
-app.use(bodyParser.urlencoded({extended: true}));
+//Generate a Random ShortURL
+function generateRandomString() {
+  return Math.random().toString(36).substr(2, 6);
+}
 
-///-------------GET
+
+
+///----------GET
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -61,7 +74,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //--------------POST
 
-//----Add a POST Route to Receive the Form Submission
+//----Add a POST Route to Receive the Form Submission -user submits longURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
@@ -74,14 +87,14 @@ app.post("/urls", (req, res) => {
   // Redirect After Form Submission -taking us to line 37 "/urls/:shortURL"
 });
 
-//----Add a POST route that updates a URL resource; POST /urls/:id
+//----Add a POST route that updates a URL resource; POST /urls/:id -user click update
 app.post("/urls/:shortURL", (req, res) => {
   console.log(req.body);
   urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect(`/urls`);
 });
 
-//----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete
+//----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete -user click delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
@@ -91,13 +104,17 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   //redirect the client back to the urls_index page ("/urls").
 });
 
-
+//----Add an endpoint to handle a POST to /login in Express server. - user login 
+app.post("/login", (req, res) => {
+  const username = req.body.username
+  //grabbing the username from the form
+  res.cookie('username', username);
+  //keeping the cookie in the browser
+  console.log(req.cookies)
+  res.redirect(`/urls`);
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-//Generate a Random ShortURL
-function generateRandomString() {
-  return Math.random().toString(36).substr(2, 6);
-}
