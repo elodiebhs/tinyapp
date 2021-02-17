@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>registration</title>
+</head>
+<body>
+
+  <%- include('partials/_header') %>
+
+  <main style="margin: 1em;">
+    <h3>Register</h3>
+  <form class="form-inline" action="/register" method="POST">
+
+    <div class="form-group mb-2">
+    <label for="email"> Your email </label>
+    <input class="form-control" type="email" name="email" style="width: 300px; margin: 1em">
+
+    <label for="password">password:</label>
+    <input  type="email" name="email"style="width: 300px; margin: 1em">
+    <button class="form-control" type="submit" class="btn btn-primary">Register</button>
+
+    </div>
+    </form>
+  
+  
+</body>
+</html>
