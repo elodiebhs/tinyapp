@@ -102,6 +102,12 @@ app.get("/register", (req,res) => {
   res.render("register", templateVars);
 })
 
+///----Adding a route to Login page
+app.get("/login", (req, res) => {
+  const templateVars = {user: req.cookies['user_id']};
+  res.render ("login", templateVars);
+})
+
 
 //--------------POST
 
@@ -169,11 +175,16 @@ app.post("/register", (req, res) =>{
   } else if (req.body.email === users[user].email){
     res.redirect(400, '/register')
     }
-  
 
   res.cookie('user_id', newUserID)
   res.redirect(`/urls`);
-})
+});
+
+//----Login page Handler
+app.post("/login", (req, res) =>{
+//if key email exist we redirect to login page oterwise access not allowed
+
+});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
