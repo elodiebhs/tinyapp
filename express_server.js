@@ -124,6 +124,12 @@ app.post("/login", (req, res) => {
   res.redirect(`/urls`);
 });
 
+//----Clear the cookie for username
+app.post("/logout", (req, res) => {
+  res.clearCookie("username", {path: '/'});
+  res.redirect(`/urls`);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
