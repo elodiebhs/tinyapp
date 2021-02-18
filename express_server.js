@@ -1,6 +1,4 @@
 const express = require("express");
-const cookieParser = require('cookie-parser')
-const bodyParser = require("body-parser");
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -8,17 +6,15 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs"); //Set ejs as the view engine.
 
 ///MIDDLEWARE - how we use the packages
+const cookieParser = require('cookie-parser')
+const bodyParser = require("body-parser");
+const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
 
 //----Global Scope Variables
-/*
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
-*/
+
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
@@ -52,6 +48,8 @@ const users = {
     password: "123"
   }
 };
+
+
 
 ///------------GET
 app.get("/", (req, res) => {
@@ -205,7 +203,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/login", (req, res) => {
   for (const user in users){
     const isEmail = users[user].email === req.body.email;
-    const isPassword = users[user].password === req.body.password;
+    const isPassword = bcrypt.compareSync(req.body.password, users[user].password);
     //rsconsole.log(isEmail, isPassword)
     if(isEmail && isPassword){
      res.cookie('user_id', users[user].id)
@@ -242,10 +240,11 @@ app.post("/register", (req, res) =>{
   }
   
   const newUserID = generateRandomString()
+  const hash = bcrypt.hashSync(req.body.password, 10);
   users[newUserID]= {
     id: newUserID,
     email: req.body.email,
-    password: req.body.password
+    password: hash
   }
   console.log(users)
 
