@@ -168,22 +168,36 @@ app.post("/urls", (req, res) => {
 });
 
 
-//----Add a POST route that updates a URL resource; POST /urls/:id -user click update
+//----Add a POST route that updates a URL resource; POST /urls/:id -user click edit
 app.post("/urls/:shortURL", (req, res) => {
   //console.log(req.body);
-  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-  res.redirect(`/urls`);
+
+  const key = req.cookies.user_id;
+  const shortURL = req.params.shortURL;
+  //The req.params object captures data based on the parameter specified in the URL.
+  //Users Can Only Edit or Delete Their Own URLs
+  if(key===urlDatabase[shortURL].userID){
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    res.redirect(`/urls/`);
+  } else {
+    res.sendStatus(404);
+  }
+  
 });
 
 
 //----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete -user click delete
 app.post("/urls/:shortURL/delete", (req, res) => {
+  const key = req.cookies.user_id;
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
-  delete urlDatabase[shortURL];
-
-  res.redirect(`/urls/`); 
-  //redirect the client back to the urls_index page ("/urls").
+  //Users Can Only Edit or Delete Their Own URLs
+  if(key===urlDatabase[shortURL].userID){
+    delete urlDatabase[shortURL];
+    res.redirect(`/urls/`);
+  } else {
+    res.sendStatus(404);
+  }
 });
 
 
@@ -210,20 +224,31 @@ app.post("/logout", (req, res) => {
 //---Registration Handler- Register
 app.post("/register", (req, res) =>{
   //console.log('register',req.body)
+  //If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
+
+  //If the e-mail or password are empty strings, send back a response with the 400 status code.
+  if (req.body.email ==="" || req.body.password === ""){
+    return res.redirect(400, '/register')
+    //console.log("here we are")
+
+  } 
+
+  for(let userkey in users){
+    let user = users[userkey];
+
+    if (req.body.email === user.email){
+      return res.redirect(400, '/register')
+    }
+  }
+  
   const newUserID = generateRandomString()
   users[newUserID]= {
     id: newUserID,
     email: req.body.email,
     password: req.body.password
   }
+  console.log(users)
 
-  //If the e-mail or password are empty strings, send back a response with the 400 status code.
-  if (req.body.email || req.body.password === ""){
-    res.redirect(400, '/register')
-  //If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
-  } else if (req.body.email === users[user].email){
-    res.redirect(400, '/register')
-    }
 
   res.cookie('user_id', newUserID)
   res.redirect(`/urls`);
