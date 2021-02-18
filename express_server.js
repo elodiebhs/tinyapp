@@ -13,9 +13,16 @@ app.use(cookieParser());
 
 
 //----Global Scope Variables
+/*
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
+};
+*/
+
+const urlDatabase = {
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 //Generate a Random ShortURL
@@ -82,23 +89,27 @@ app.get("/urls", (req, res) => {
 
 //----Add a GET Route to Show the Form - create new url
 app.get("/urls/new", (req, res) => {
-  const templateVars = {
+  if(req.cookies.user_id){
+    const templateVars = {
     user: users[req.cookies.user_id]
-};
-res.render("urls_new", templateVars);
+   };
+   res.render("urls_new", templateVars);
+  } else {
+    res.redirect('/login')
+  }
 });
 
 
 //----Adding a Second Route for short URL page
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: req.cookies["user_id"], };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.cookies["user_id"], };
   res.render("urls_show", templateVars);
 });
 
 
 //----Redirect any request to "/u/:shortURL" to its longURL // we type in the short URL and it brings us to the long URL website
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -123,7 +134,7 @@ app.get("/login", (req, res) => {
 //----Add a POST Route to Receive the Form Submission -user submits longURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {longURL : req.body.longURL, userID: req.cookies['user_id']};
   //The req.body object allows you to access data in a string or JSON object from the client side.
   // we are adding Key/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new
   //console.log(req.body);
@@ -137,7 +148,7 @@ app.post("/urls", (req, res) => {
 //----Add a POST route that updates a URL resource; POST /urls/:id -user click update
 app.post("/urls/:shortURL", (req, res) => {
   //console.log(req.body);
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
   res.redirect(`/urls`);
 });
 
