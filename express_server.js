@@ -33,11 +33,13 @@ const users = {
     id: "user2RandomID", 
     email: "user2@example.com", 
     password: "dishwasher-funk"
+  },
+  "user3RandomID": {
+    id: "user3RandomID", 
+    email: "elodiebouthors@hotmail.com", 
+    password: "Hello@123"
   }
 };
-//users["newuser"]={id : "elodie", email : "elodiebouthors@"}
-//console.log(users)
-
 
 ///------------GET
 app.get("/", (req, res) => {
@@ -55,13 +57,17 @@ app.get("/hello", (req, res) => {
 
 //----route for /urls
 app.get("/urls", (req, res) => {
-  const key = req.cookies["user_id"];
+
+  const key = req.cookies.user_id;
+  if(!key){
+    return res.redirect("/login")
+  };
   const templateVars = { 
     urls: urlDatabase,
     user: users[key]
   
   };
-  console.log(templateVars);
+  //console.log(templateVars);
   // we are sending that to the URLs index template line 39
   /*{
    urls: {
@@ -76,14 +82,16 @@ app.get("/urls", (req, res) => {
 
 //----Add a GET Route to Show the Form - create new url
 app.get("/urls/new", (req, res) => {
-  const templateVars ={username: req.cookies["username"]}
-  res.render("urls_new", templateVars);
+  const templateVars = {
+    user: users[req.cookies.user_id]
+};
+res.render("urls_new", templateVars);
 });
 
 
 //----Adding a Second Route for short URL page
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies["username"], };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: req.cookies["user_id"], };
   res.render("urls_show", templateVars);
 });
 
@@ -104,6 +112,7 @@ app.get("/register", (req,res) => {
 
 ///----Adding a route to Login page
 app.get("/login", (req, res) => {
+  //console.log("users",users)
   const templateVars = {user: req.cookies['user_id']};
   res.render ("login", templateVars);
 })
@@ -117,7 +126,7 @@ app.post("/urls", (req, res) => {
   urlDatabase[shortURL] = req.body.longURL;
   //The req.body object allows you to access data in a string or JSON object from the client side.
   // we are adding Key/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new
-  console.log(req.body);
+  //console.log(req.body);
   // Log the POST request body to the console
   //res.send("Ok"); // Respond with 'Ok' (we will replace this)
   res.redirect(`/urls/${shortURL}`);
@@ -127,7 +136,7 @@ app.post("/urls", (req, res) => {
 
 //----Add a POST route that updates a URL resource; POST /urls/:id -user click update
 app.post("/urls/:shortURL", (req, res) => {
-  console.log(req.body);
+  //console.log(req.body);
   urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect(`/urls`);
 });
@@ -146,23 +155,27 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //----Add an endpoint to handle a POST to /login in Express server. - user login 
 app.post("/login", (req, res) => {
-  const username = req.body.username
-  //grabbing the username from the form
-  res.cookie('username', username);
-  //keeping the cookie in the browser
-  console.log(req.cookies)
-  res.redirect(`/urls`);
+  for (const user in users){
+    const isEmail = users[user].email === req.body.email;
+    const isPassword = users[user].password === req.body.password;
+    console.log(isEmail, isPassword)
+    if(isEmail && isPassword){
+     res.cookie('user_id', users[user].id)
+     res.redirect('/urls')
+    } 
+  } 
+  res.redirect(403, '/login')
 });
 
 //----Clear the cookie for username
 app.post("/logout", (req, res) => {
-  res.clearCookie("username", {path: '/'});
+  res.clearCookie('user_id');
   res.redirect(`/urls`);
 });
 
-//---Registration Handler
+//---Registration Handler- Register
 app.post("/register", (req, res) =>{
-  console.log('register',req.body)
+  //console.log('register',req.body)
   const newUserID = generateRandomString()
   users[newUserID]= {
     id: newUserID,
@@ -170,8 +183,10 @@ app.post("/register", (req, res) =>{
     password: req.body.password
   }
 
+  //If the e-mail or password are empty strings, send back a response with the 400 status code.
   if (req.body.email || req.body.password === ""){
     res.redirect(400, '/register')
+  //If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
   } else if (req.body.email === users[user].email){
     res.redirect(400, '/register')
     }
@@ -180,11 +195,6 @@ app.post("/register", (req, res) =>{
   res.redirect(`/urls`);
 });
 
-//----Login page Handler
-app.post("/login", (req, res) =>{
-//if key email exist we redirect to login page oterwise access not allowed
-
-});
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
