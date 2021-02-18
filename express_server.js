@@ -45,6 +45,11 @@ const users = {
     id: "user3RandomID", 
     email: "elodiebouthors@hotmail.com", 
     password: "Hello@123"
+  },
+  "user4RandomID": {
+    id: "user4RandomID", 
+    email: "admin@hotmail.com", 
+    password: "123"
   }
 };
 
@@ -62,28 +67,31 @@ app.get("/hello", (req, res) => {
   // we can see Hello World on the page
 });
 
+
+const urlsForUser = (id) => {
+  let result = {};
+  for (let url in urlDatabase){
+    if(urlDatabase[url].userID === id) {
+      result[url]=urlDatabase[url]
+    }
+    }
+    console.log(result)
+    return result
+  }
+
 //----route for /urls
 app.get("/urls", (req, res) => {
 
   const key = req.cookies.user_id;
   if(!key){
     return res.redirect("/login")
-  };
+  } else {
   const templateVars = { 
-    urls: urlDatabase,
+    urls: urlsForUser(key),
     user: users[key]
-  
   };
-  //console.log(templateVars);
-  // we are sending that to the URLs index template line 39
-  /*{
-   urls: {
-     b2xVn2: 'http://www.lighthouselabs.ca',
-     '9sm5xK': 'http://www.google.com'
-   }
-  }
- */
   res.render("urls_index", templateVars);
+}
 });
 
 
@@ -102,9 +110,24 @@ app.get("/urls/new", (req, res) => {
 
 //----Adding a Second Route for short URL page
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.cookies["user_id"], };
-  res.render("urls_show", templateVars);
+  const shortURL = req.params.shortURL;
+  const key = req.cookies.user_id;
+  
+  if(!key){
+    res.status(401).send("your have to login")
+    return
+  } 
+  const urlBelongToUSer = urlDatabase[shortURL] && urlDatabase[shortURL].userID === key
+  if(urlBelongToUSer){
+    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.cookies["user_id"], };
+    res.render("urls_show", templateVars);
+    return;
+  } else {
+   res.status(401).send("your don't have permit to access this page")
+   return
+  }
 });
+
 
 
 //----Redirect any request to "/u/:shortURL" to its longURL // we type in the short URL and it brings us to the long URL website
@@ -169,7 +192,7 @@ app.post("/login", (req, res) => {
   for (const user in users){
     const isEmail = users[user].email === req.body.email;
     const isPassword = users[user].password === req.body.password;
-    console.log(isEmail, isPassword)
+    //rsconsole.log(isEmail, isPassword)
     if(isEmail && isPassword){
      res.cookie('user_id', users[user].id)
      res.redirect('/urls')
