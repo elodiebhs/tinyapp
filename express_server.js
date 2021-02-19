@@ -6,11 +6,17 @@ const PORT = 8080; // default port 8080
 app.set("view engine", "ejs"); //Set ejs as the view engine.
 
 ///MIDDLEWARE - how we use the packages
-const cookieParser = require('cookie-parser')
+//const cookieParser = require('cookie-parser')
+const cookieSession = require('cookie-session');
 const bodyParser = require("body-parser");
 const bcrypt = require('bcrypt');
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+//app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
+
 
 
 //----Global Scope Variables
@@ -80,7 +86,8 @@ const urlsForUser = (id) => {
 //----route for /urls
 app.get("/urls", (req, res) => {
 
-  const key = req.cookies.user_id;
+  //const key = req.cookies.user_id;
+  const key = req.session.user_id;
   if(!key){
     return res.redirect("/login")
   } else {
@@ -95,9 +102,9 @@ app.get("/urls", (req, res) => {
 
 //----Add a GET Route to Show the Form - create new url
 app.get("/urls/new", (req, res) => {
-  if(req.cookies.user_id){
+  if(req.session.user_id){
     const templateVars = {
-    user: users[req.cookies.user_id]
+    user: users[req.session.user_id]
    };
    res.render("urls_new", templateVars);
   } else {
@@ -109,7 +116,7 @@ app.get("/urls/new", (req, res) => {
 //----Adding a Second Route for short URL page
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const key = req.cookies.user_id;
+  const key = req.session.user_id;
   
   if(!key){
     res.status(401).send("your have to login")
@@ -117,7 +124,7 @@ app.get("/urls/:shortURL", (req, res) => {
   } 
   const urlBelongToUSer = urlDatabase[shortURL] && urlDatabase[shortURL].userID === key
   if(urlBelongToUSer){
-    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.cookies["user_id"], };
+    const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.session["user_id"], };
     res.render("urls_show", templateVars);
     return;
   } else {
@@ -137,7 +144,7 @@ app.get("/u/:shortURL", (req, res) => {
 //----Adding a route to register
 app.get("/register", (req,res) => {
   
-  const templateVars = {user: req.cookies['user_id']};
+  const templateVars = {user: req.session['user_id']};
 
   res.render("register", templateVars);
 })
@@ -145,7 +152,7 @@ app.get("/register", (req,res) => {
 ///----Adding a route to Login page
 app.get("/login", (req, res) => {
   //console.log("users",users)
-  const templateVars = {user: req.cookies['user_id']};
+  const templateVars = {user: req.session['user_id']};
   res.render ("login", templateVars);
 })
 
@@ -155,7 +162,7 @@ app.get("/login", (req, res) => {
 //----Add a POST Route to Receive the Form Submission -user submits longURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = {longURL : req.body.longURL, userID: req.cookies['user_id']};
+  urlDatabase[shortURL] = {longURL : req.body.longURL, userID: req.session['user_id']};
   //The req.body object allows you to access data in a string or JSON object from the client side.
   // we are adding Key/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new
   //console.log(req.body);
@@ -170,7 +177,7 @@ app.post("/urls", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   //console.log(req.body);
 
-  const key = req.cookies.user_id;
+  const key = req.session.user_id;
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
   //Users Can Only Edit or Delete Their Own URLs
@@ -186,7 +193,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 //----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete -user click delete
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const key = req.cookies.user_id;
+  const key = req.session.user_id;
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
   //Users Can Only Edit or Delete Their Own URLs
@@ -206,7 +213,8 @@ app.post("/login", (req, res) => {
     const isPassword = bcrypt.compareSync(req.body.password, users[user].password);
     //rsconsole.log(isEmail, isPassword)
     if(isEmail && isPassword){
-     res.cookie('user_id', users[user].id)
+     //res.cookie('user_id', users[user].id)
+     req.session.user_id = users[user].id
      res.redirect('/urls')
     } 
   } 
@@ -215,7 +223,8 @@ app.post("/login", (req, res) => {
 
 //----Clear the cookie for username
 app.post("/logout", (req, res) => {
-  res.clearCookie('user_id');
+  //res.clearCookie('user_id');
+  req.session.user_id = null;
   res.redirect(`/urls`);
 });
 
@@ -228,9 +237,7 @@ app.post("/register", (req, res) =>{
   if (req.body.email ==="" || req.body.password === ""){
     return res.redirect(400, '/register')
     //console.log("here we are")
-
   } 
-
   for(let userkey in users){
     let user = users[userkey];
 
@@ -238,7 +245,6 @@ app.post("/register", (req, res) =>{
       return res.redirect(400, '/register')
     }
   }
-  
   const newUserID = generateRandomString()
   const hash = bcrypt.hashSync(req.body.password, 10);
   users[newUserID]= {
@@ -249,7 +255,8 @@ app.post("/register", (req, res) =>{
   console.log(users)
 
 
-  res.cookie('user_id', newUserID)
+  //res.cookie('user_id', newUserID)
+  req.session.user_id = newUserID
   res.redirect(`/urls`);
 });
 
