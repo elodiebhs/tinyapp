@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-
+const {getUserByEmail} = require('./helper')
 ///SET
 app.set("view engine", "ejs"); //Set ejs as the view engine.
 
@@ -208,17 +208,22 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //----Add an endpoint to handle a POST to /login in Express server. - user login 
 app.post("/login", (req, res) => {
-  for (const user in users){
-    const isEmail = users[user].email === req.body.email;
-    const isPassword = bcrypt.compareSync(req.body.password, users[user].password);
+  let user = getUserByEmail(req.body.email, users);
+  if(!user){
+    res.redirect(403, '/login')
+    return
+  } else {
+    const isPassword = bcrypt.compareSync(req.body.password, user.password);
     //rsconsole.log(isEmail, isPassword)
-    if(isEmail && isPassword){
+    if(isPassword){
      //res.cookie('user_id', users[user].id)
-     req.session.user_id = users[user].id
+     req.session.user_id = user.id
      res.redirect('/urls')
+     return
     } 
   } 
   res.redirect(403, '/login')
+  
 });
 
 //----Clear the cookie for username
@@ -238,13 +243,12 @@ app.post("/register", (req, res) =>{
     return res.redirect(400, '/register')
     //console.log("here we are")
   } 
-  for(let userkey in users){
-    let user = users[userkey];
-
-    if (req.body.email === user.email){
-      return res.redirect(400, '/register')
-    }
+  
+  //testing if the user is already registered
+  if (getUserByEmail(req.body.email, users)){
+    return res.redirect(400, '/login')
   }
+  
   const newUserID = generateRandomString()
   const hash = bcrypt.hashSync(req.body.password, 10);
   users[newUserID]= {
