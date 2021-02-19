@@ -56,22 +56,18 @@ const users = {
 };
 
 
+///---------GET
 
-///------------GET
+//----GET request to root page should be redirected to login page
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect("/login");
 });
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-  // we can see Hello World on the page
-});
-
-
+//----GET route for /urls
 const urlsForUser = (id) => {
   let result = {};
   for (let url in urlDatabase){
@@ -83,10 +79,8 @@ const urlsForUser = (id) => {
     return result
   }
 
-//----route for /urls
+//if user is looged in can see urls otherwise redirected to login
 app.get("/urls", (req, res) => {
-
-  //const key = req.cookies.user_id;
   const key = req.session.user_id;
   if(!key){
     return res.redirect("/login")
@@ -100,7 +94,8 @@ app.get("/urls", (req, res) => {
 });
 
 
-//----Add a GET Route to Show the Form - create new url
+//----GET Route to Show the Form - create new url
+//if the user is logged in retunr html otherwise redirect to login
 app.get("/urls/new", (req, res) => {
   if(req.session.user_id){
     const templateVars = {
@@ -113,15 +108,17 @@ app.get("/urls/new", (req, res) => {
 });
 
 
-//----Adding a Second Route for short URL page
+//----GET Route for short URL page
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const key = req.session.user_id;
   
+  //if the user is not logged in it show error and message
   if(!key){
     res.status(401).send("your have to login")
     return
   } 
+  // url needs to belong to user in order to have access otherwise error message
   const urlBelongToUSer = urlDatabase[shortURL] && urlDatabase[shortURL].userID === key
   if(urlBelongToUSer){
     const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.session["user_id"], };
@@ -134,22 +131,20 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 
-
-//----Redirect any request to "/u/:shortURL" to its longURL // we type in the short URL and it brings us to the long URL website
+//----GET Redirect any request to "/u/:shortURL" to its longURL // we type in the short URL and it brings us to the long URL website
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
-//----Adding a route to register
-app.get("/register", (req,res) => {
-  
-  const templateVars = {user: req.session['user_id']};
 
+//----GET Adding a route to register
+app.get("/register", (req,res) => {
+  const templateVars = {user: req.session['user_id']};
   res.render("register", templateVars);
 })
 
-///----Adding a route to Login page
+///----GET Adding a route to Login page
 app.get("/login", (req, res) => {
   //console.log("users",users)
   const templateVars = {user: req.session['user_id']};
@@ -159,24 +154,18 @@ app.get("/login", (req, res) => {
 
 //--------------POST
 
-//----Add a POST Route to Receive the Form Submission -user submits longURL
+//----POST Route to Receive the Form Submission -user submits longURL
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {longURL : req.body.longURL, userID: req.session['user_id']};
-  //The req.body object allows you to access data in a string or JSON object from the client side.
-  // we are adding Key/Value to urlDatabase. Taking whatever is in the box called name=LongURL in urls_new
-  //console.log(req.body);
-  // Log the POST request body to the console
-  //res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  
   res.redirect(`/urls/${shortURL}`);
-  // Redirect After Form Submission -taking us to line 37 "/urls/:shortURL"
 });
 
 
-//----Add a POST route that updates a URL resource; POST /urls/:id -user click edit
+//----POST route that updates a URL resource; POST /urls/:id -user click edit
 app.post("/urls/:shortURL", (req, res) => {
-  //console.log(req.body);
-
+  
   const key = req.session.user_id;
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
@@ -191,7 +180,7 @@ app.post("/urls/:shortURL", (req, res) => {
 });
 
 
-//----Add a POST route that removes a URL resource: POST /urls/:shortURL/delete -user click delete
+//----POST route that removes a URL resource: POST /urls/:shortURL/delete - user click delete
 app.post("/urls/:shortURL/delete", (req, res) => {
   const key = req.session.user_id;
   const shortURL = req.params.shortURL;
@@ -201,12 +190,12 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[shortURL];
     res.redirect(`/urls/`);
   } else {
-    res.sendStatus(404);
+    res.send('please login');
   }
 });
 
 
-//----Add an endpoint to handle a POST to /login in Express server. - user login 
+//----POST to /login in Express server. - user login 
 app.post("/login", (req, res) => {
   let user = getUserByEmail(req.body.email, users);
   if(!user){
@@ -214,9 +203,7 @@ app.post("/login", (req, res) => {
     return
   } else {
     const isPassword = bcrypt.compareSync(req.body.password, user.password);
-    //rsconsole.log(isEmail, isPassword)
     if(isPassword){
-     //res.cookie('user_id', users[user].id)
      req.session.user_id = user.id
      res.redirect('/urls')
      return
@@ -226,7 +213,7 @@ app.post("/login", (req, res) => {
   
 });
 
-//----Clear the cookie for username
+//----POTS logout Clear the cookie for username
 app.post("/logout", (req, res) => {
   //res.clearCookie('user_id');
   req.session.user_id = null;
@@ -235,7 +222,7 @@ app.post("/logout", (req, res) => {
 
 //---Registration Handler- Register
 app.post("/register", (req, res) =>{
-  //console.log('register',req.body)
+  
   //If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
 
   //If the e-mail or password are empty strings, send back a response with the 400 status code.
