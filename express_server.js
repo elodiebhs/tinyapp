@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const {getUserByEmail} = require('./helper')
+const {getUserByEmail} = require('./helper');
 ///SET
 app.set("view engine", "ejs"); //Set ejs as the view engine.
 
@@ -30,27 +30,27 @@ const urlDatabase = {
 //Generate a Random ShortURL
 function generateRandomString() {
   return Math.random().toString(36).substr(2, 6);
-};
+}
 
-const users = { 
+const users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
- "user2RandomID": {
-    id: "user2RandomID", 
-    email: "user2@example.com", 
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
     password: "dishwasher-funk"
   },
   "user3RandomID": {
-    id: "user3RandomID", 
-    email: "elodiebouthors@hotmail.com", 
+    id: "user3RandomID",
+    email: "elodiebouthors@hotmail.com",
     password: "Hello@123"
   },
   "user4RandomID": {
-    id: "user4RandomID", 
-    email: "admin@hotmail.com", 
+    id: "user4RandomID",
+    email: "admin@hotmail.com",
     password: "123"
   }
 };
@@ -70,40 +70,40 @@ app.get("/urls.json", (req, res) => {
 //----GET route for /urls
 const urlsForUser = (id) => {
   let result = {};
-  for (let url in urlDatabase){
-    if(urlDatabase[url].userID === id) {
-      result[url]=urlDatabase[url]
+  for (let url in urlDatabase) {
+    if (urlDatabase[url].userID === id) {
+      result[url] = urlDatabase[url];
     }
-    }
-    console.log(result)
-    return result
   }
+  console.log(result);
+  return result;
+};
 
 //if user is looged in can see urls otherwise redirected to login
 app.get("/urls", (req, res) => {
   const key = req.session.user_id;
-  if(!key){
-    return res.redirect("/login")
+  if (!key) {
+    return res.redirect("/login");
   } else {
-  const templateVars = { 
-    urls: urlsForUser(key),
-    user: users[key]
-  };
-  res.render("urls_index", templateVars);
-}
+    const templateVars = {
+      urls: urlsForUser(key),
+      user: users[key]
+    };
+    res.render("urls_index", templateVars);
+  }
 });
 
 
 //----GET Route to Show the Form - create new url
 //if the user is logged in retunr html otherwise redirect to login
 app.get("/urls/new", (req, res) => {
-  if(req.session.user_id){
+  if (req.session.user_id) {
     const templateVars = {
-    user: users[req.session.user_id]
-   };
-   res.render("urls_new", templateVars);
+      user: users[req.session.user_id]
+    };
+    res.render("urls_new", templateVars);
   } else {
-    res.redirect('/login')
+    res.redirect('/login');
   }
 });
 
@@ -114,19 +114,19 @@ app.get("/urls/:shortURL", (req, res) => {
   const key = req.session.user_id;
   
   //if the user is not logged in it show error and message
-  if(!key){
-    res.status(401).send("your have to login")
-    return
-  } 
+  if (!key) {
+    res.status(401).send("your have to login");
+    return;
+  }
   // url needs to belong to user in order to have access otherwise error message
-  const urlBelongToUSer = urlDatabase[shortURL] && urlDatabase[shortURL].userID === key
-  if(urlBelongToUSer){
+  const urlBelongToUSer = urlDatabase[shortURL] && urlDatabase[shortURL].userID === key;
+  if (urlBelongToUSer) {
     const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: req.session["user_id"], };
     res.render("urls_show", templateVars);
     return;
   } else {
-   res.status(401).send("your don't have permit to access this page")
-   return
+    res.status(401).send("your don't have permit to access this page");
+    return;
   }
 });
 
@@ -142,14 +142,14 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/register", (req,res) => {
   const templateVars = {user: req.session['user_id']};
   res.render("register", templateVars);
-})
+});
 
 ///----GET Adding a route to Login page
 app.get("/login", (req, res) => {
   //console.log("users",users)
   const templateVars = {user: req.session['user_id']};
-  res.render ("login", templateVars);
-})
+  res.render("login", templateVars);
+});
 
 
 //--------------POST
@@ -170,7 +170,7 @@ app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
   //Users Can Only Edit or Delete Their Own URLs
-  if(key===urlDatabase[shortURL].userID){
+  if (key === urlDatabase[shortURL].userID) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
     res.redirect(`/urls/`);
   } else {
@@ -186,7 +186,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   const shortURL = req.params.shortURL;
   //The req.params object captures data based on the parameter specified in the URL.
   //Users Can Only Edit or Delete Their Own URLs
-  if(key===urlDatabase[shortURL].userID){
+  if (key === urlDatabase[shortURL].userID) {
     delete urlDatabase[shortURL];
     res.redirect(`/urls/`);
   } else {
@@ -195,21 +195,21 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 
-//----POST to /login in Express server. - user login 
+//----POST to /login in Express server. - user login
 app.post("/login", (req, res) => {
   let user = getUserByEmail(req.body.email, users);
-  if(!user){
-    res.redirect(403, '/login')
-    return
+  if (!user) {
+    res.redirect(403, '/login');
+    return;
   } else {
     const isPassword = bcrypt.compareSync(req.body.password, user.password);
-    if(isPassword){
-     req.session.user_id = user.id
-     res.redirect('/urls')
-     return
-    } 
-  } 
-  res.redirect(403, '/login')
+    if (isPassword) {
+      req.session.user_id = user.id;
+      res.redirect('/urls');
+      return;
+    }
+  }
+  res.redirect(403, '/login');
   
 });
 
@@ -226,28 +226,27 @@ app.post("/register", (req, res) =>{
   //If someone tries to register with an email that is already in the users object, send back a response with the 400 status code
 
   //If the e-mail or password are empty strings, send back a response with the 400 status code.
-  if (req.body.email ==="" || req.body.password === ""){
-    return res.redirect(400, '/register')
-    //console.log("here we are")
-  } 
-  
-  //testing if the user is already registered
-  if (getUserByEmail(req.body.email, users)){
-    return res.redirect(400, '/login')
+  if (req.body.email === "" || req.body.password === "") {
+    return res.redirect(400, '/register');
   }
   
-  const newUserID = generateRandomString()
+  //testing if the user is already registered
+  if (getUserByEmail(req.body.email, users)) {
+    return res.redirect(400, '/login');
+  }
+  
+  const newUserID = generateRandomString();
   const hash = bcrypt.hashSync(req.body.password, 10);
-  users[newUserID]= {
+  users[newUserID] = {
     id: newUserID,
     email: req.body.email,
     password: hash
-  }
-  console.log(users)
+  };
+  console.log(users);
 
 
   //res.cookie('user_id', newUserID)
-  req.session.user_id = newUserID
+  req.session.user_id = newUserID;
   res.redirect(`/urls`);
 });
 
